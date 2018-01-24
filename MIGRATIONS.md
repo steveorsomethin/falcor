@@ -1,3 +1,67 @@
+# 1.x to 2.x
+Models always (usually) onNext
+-------
+When starting with the following json graph
+```javascript
+{
+    lists: {
+        2343: {
+            0: { $type: "ref", value: ["videos", 123] },
+            1: { $type: "ref", value: ["videos", 123] }
+        }
+    },
+    videos: {
+        123: {
+            name: { $type: "atom", value: undefined }
+        }
+    }
+}
+```
+
+A `get` would not emit values for intermediate branches found in the cache, unless an atom was found
+```javascript
+const json = await model.get(["lists", 2343, {to: 1}, "name"]);
+
+{
+  json: {
+    {
+      lists: {
+        2343: {
+          0: {}
+        }
+      }
+    }
+  }
+}
+```
+
+Where now, any branches or references found in the cache will always be emitted in the json output
+```javascript
+const json = await model.get(["lists", 2343, {to: 1}, "name"]);
+
+{
+  json: {
+    lists: {
+      2343: {
+        0: {},
+        1: {}
+      }
+    }
+  }
+}
+```
+
+That means that even requesting no paths will emit an empty object, as the cache root will be found
+```javascript
+const json = await model.get();
+
+{
+    json: {}
+}
+```
+
+The only case where get won't onNext at least one value is when it receives only errors from the underlying data source.
+
 # 0.x to 1.x
 
 Refs no longer emitted as json
